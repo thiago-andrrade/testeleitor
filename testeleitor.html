@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de Acesso à Câmera</title>
+    <style>
+        /* Estilos básicos */
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        #video {
+            width: 100%;
+            max-width: 500px;
+            border: 1px solid #ddd;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Teste de Acesso à Câmera</h1>
+    <button id="startCamera">Iniciar Câmera</button>
+    <video id="video" autoplay playsinline></video>
+
+    <script>
+        const startCameraBtn = document.getElementById('startCamera');
+        const videoElement = document.getElementById('video');
+
+        // Função para iniciar a câmera com getUserMedia
+        function startCamera() {
+            // Verifique se a API de mídia está disponível no navegador
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+                    .then((stream) => {
+                        videoElement.srcObject = stream;
+                        console.log("Câmera iniciada com sucesso.");
+                    })
+                    .catch((error) => {
+                        console.error("Erro ao acessar a câmera:", error);
+                        alert("Erro ao acessar a câmera: " + error.message);
+                    });
+            } else {
+                alert("A API de acesso à câmera não é suportada neste navegador.");
+            }
+        }
+
+        // Inicia a câmera ao clicar no botão
+        startCameraBtn.addEventListener('click', startCamera);
+    </script>
+
+</body>
+</html>
