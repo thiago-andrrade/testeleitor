@@ -36,6 +36,7 @@
         let streamStarted = false;
         let mediaStream = null;
 
+        // Função para iniciar a câmera
         async function startCamera() {
             if (!streamStarted) {
                 try {
@@ -54,6 +55,7 @@
             }
         }
 
+        // Função para parar a câmera
         function stopCamera() {
             if (mediaStream) {
                 let tracks = mediaStream.getTracks();
@@ -65,6 +67,7 @@
             }
         }
 
+        // Função para detectar e decodificar o código de barras
         function decodeBarcode() {
             const barcodeDetector = new BarcodeDetector({ formats: ['ean_13', 'code_128'] });
 
