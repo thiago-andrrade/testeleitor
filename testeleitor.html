@@ -7,7 +7,9 @@
     <style>
         body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
         #barcodeInput { padding: 10px; font-size: 1.2em; width: 100%; max-width: 300px; }
-        video { max-width: 100%; width: 300px; margin-top: 20px; }
+        #instructions { font-size: 1.1em; margin-top: 10px; color: #666; }
+        video { max-width: 100%; width: 300px; margin-top: 20px; border: 2px solid #000; }
+        .overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); color: white; display: flex; justify-content: center; align-items: center; font-size: 1.2em; }
     </style>
 </head>
 <body>
@@ -18,11 +20,19 @@
     <br><br>
     <button onclick="startCamera()">Iniciar Leitura</button>
 
+    <div id="instructions">Aponte a câmera para o código de barras.</div>
+
+    <div class="overlay" id="overlay" style="display: none;">
+        Aguardando leitura do código de barras...
+    </div>
+
     <video id="video" autoplay playsinline style="display: none;"></video>
 
     <script>
         let video = document.getElementById('video');
         let barcodeInput = document.getElementById('barcodeInput');
+        let overlay = document.getElementById('overlay');
+        let instructions = document.getElementById('instructions');
         let streamStarted = false;
 
         async function startCamera() {
@@ -31,6 +41,8 @@
                     let stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
                     video.srcObject = stream;
                     video.style.display = 'block';
+                    overlay.style.display = 'flex'; // Exibe a sobreposição com a mensagem
+                    instructions.style.display = 'none'; // Esconde a mensagem de instruções
                     streamStarted = true;
                     decodeBarcode();
                 } catch (error) {
@@ -45,6 +57,8 @@
                 let tracks = video.srcObject.getTracks();
                 tracks.forEach(track => track.stop());
                 video.style.display = 'none';
+                overlay.style.display = 'none'; // Esconde a sobreposição
+                instructions.style.display = 'block'; // Exibe a instrução
                 streamStarted = false;
             }
         }
@@ -58,14 +72,14 @@
                         barcodeInput.value = barcodes[0].rawValue;
                         stopCamera();
                     } else {
-                        requestAnimationFrame(scanFrame);
+                        requestAnimationFrame(scanFrame); // Continua verificando
                     }
                 }).catch(err => {
                     console.error("Erro ao detectar código de barras:", err);
                 });
             }
 
-            scanFrame();
+            scanFrame(); // Começa a verificação de cada quadro
         }
     </script>
 </body>
