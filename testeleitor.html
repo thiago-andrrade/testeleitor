@@ -3,57 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Teste de Acesso à Câmera</title>
+    <title>Leitor de Código de Barras</title>
     <style>
-        /* Estilos básicos */
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-        }
-        #video {
-            width: 100%;
-            max-width: 500px;
-            border: 1px solid #ddd;
-            margin-top: 10px;
-        }
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        #barcodeInput { padding: 10px; font-size: 1.2em; width: 100%; max-width: 300px; }
+        video { max-width: 100%; width: 300px; margin-top: 20px; }
     </style>
 </head>
 <body>
+    <h1>Leitor de Código de Barras</h1>
+    
+    <label for="barcodeInput">Código de Barras:</label>
+    <input type="text" id="barcodeInput" placeholder="Clique para ler código de barras" readonly onclick="startCamera()" />
+    <br><br>
+    <button onclick="startCamera()">Iniciar Leitura</button>
 
-    <h1>Teste de Acesso à Câmera</h1>
-    <button id="startCamera">Iniciar Câmera</button>
-    <video id="video" autoplay playsinline></video>
+    <video id="video" autoplay playsinline style="display: none;"></video>
 
     <script>
-        const startCameraBtn = document.getElementById('startCamera');
-        const videoElement = document.getElementById('video');
+        let video = document.getElementById('video');
+        let barcodeInput = document.getElementById('barcodeInput');
+        let streamStarted = false;
 
-        // Função para iniciar a câmera com getUserMedia
-        function startCamera() {
-            // Verifique se a API de mídia está disponível no navegador
-            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-                    .then((stream) => {
-                        videoElement.srcObject = stream;
-                        console.log("Câmera iniciada com sucesso.");
-                    })
-                    .catch((error) => {
-                        console.error("Erro ao acessar a câmera:", error);
-                        alert("Erro ao acessar a câmera: " + error.message);
-                    });
-            } else {
-                alert("A API de acesso à câmera não é suportada neste navegador.");
+        async function startCamera() {
+            if (!streamStarted) {
+                try {
+                    let stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                    video.srcObject = stream;
+                    video.style.display = 'block';
+                    streamStarted = true;
+                    decodeBarcode();
+                } catch (error) {
+                    console.error("Erro ao acessar a câmera:", error);
+                    alert("Permissão para acessar a câmera negada ou não disponível.");
+                }
             }
         }
 
-        // Inicia a câmera ao clicar no botão
-        startCameraBtn.addEventListener('click', startCamera);
-    </script>
+        function stopCamera() {
+            if (video.srcObject) {
+                let tracks = video.srcObject.getTracks();
+                tracks.forEach(track => track.stop());
+                video.style.display = 'none';
+                streamStarted = false;
+            }
+        }
 
+        function decodeBarcode() {
+            const barcodeDetector = new BarcodeDetector({ formats: ['ean_13', 'code_128'] });
+
+            function scanFrame() {
+                barcodeDetector.detect(video).then(barcodes => {
+                    if (barcodes.length > 0) {
+                        barcodeInput.value = barcodes[0].rawValue;
+                        stopCamera();
+                    } else {
+                        requestAnimationFrame(scanFrame);
+                    }
+                }).catch(err => {
+                    console.error("Erro ao detectar código de barras:", err);
+                });
+            }
+
+            scanFrame();
+        }
+    </script>
 </body>
 </html>
