@@ -34,17 +34,19 @@
         let overlay = document.getElementById('overlay');
         let instructions = document.getElementById('instructions');
         let streamStarted = false;
+        let mediaStream = null;
 
         async function startCamera() {
             if (!streamStarted) {
                 try {
-                    let stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-                    video.srcObject = stream;
+                    // Solicita acesso à câmera
+                    mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                    video.srcObject = mediaStream;
                     video.style.display = 'block';
                     overlay.style.display = 'flex'; // Exibe a sobreposição com a mensagem
                     instructions.style.display = 'none'; // Esconde a mensagem de instruções
                     streamStarted = true;
-                    decodeBarcode();
+                    decodeBarcode(); // Começa a leitura do código de barras
                 } catch (error) {
                     console.error("Erro ao acessar a câmera:", error);
                     alert("Permissão para acessar a câmera negada ou não disponível.");
@@ -53,8 +55,8 @@
         }
 
         function stopCamera() {
-            if (video.srcObject) {
-                let tracks = video.srcObject.getTracks();
+            if (mediaStream) {
+                let tracks = mediaStream.getTracks();
                 tracks.forEach(track => track.stop());
                 video.style.display = 'none';
                 overlay.style.display = 'none'; // Esconde a sobreposição
@@ -69,13 +71,16 @@
             function scanFrame() {
                 barcodeDetector.detect(video).then(barcodes => {
                     if (barcodes.length > 0) {
-                        barcodeInput.value = barcodes[0].rawValue;
-                        stopCamera();
+                        // Quando o código de barras for detectado
+                        barcodeInput.value = barcodes[0].rawValue; // Preenche o campo com o código lido
+                        stopCamera(); // Para a câmera
                     } else {
-                        requestAnimationFrame(scanFrame); // Continua verificando
+                        // Se não detectado, continua verificando
+                        requestAnimationFrame(scanFrame);
                     }
                 }).catch(err => {
                     console.error("Erro ao detectar código de barras:", err);
+                    stopCamera(); // Em caso de erro, também para a câmera
                 });
             }
 
